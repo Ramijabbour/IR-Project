@@ -39,7 +39,7 @@ public class DocumentsParse {
 			TermsTokens = new ArrayList<String>();
 			BufferedReader in = null;
 			StringBuilder sb = new StringBuilder();
-	        ReadStopWords("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\stop words.txt");
+	        ReadStopWords("C:\\Users\\Khalil\\Downloads\\Compressed\\IR Homework\\stop words.txt");
         	GetIrregularVerbs();
 
 		        for (File f : allfiles) 
@@ -96,11 +96,44 @@ public class DocumentsParse {
 
 		public void removeUniqueCharactar(String token) 
 		{
-		    Pattern p = Pattern.compile("[a-z]+[.][a-z]+|([a-z]+[-]*)+|[0-9]+"); 
+			//|[a-zA-Z0-9]([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+[a-zA-Z0-9]+)([.][a-zA-Z0-9-]+[a-zA-Z0-9]+)*)|[a-z]+[.][a-z]+|([a-z]+[-]*)+|[0-9]+
+		    Pattern p = Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+"); 
 	        Matcher m1 = p.matcher(token); 			           
 	        while (m1.find())
-	        	TermsTokens.add(m1.group()); 	
+	        	//TermsTokens.add(m1.group());
+	        	{System.out.println(m1.group());
+	        	removeSemicolonCharactar(m1.group());
+	        	checkEmailCharactar(m1.group());
+	        	//check_Date(m1.group());
+	        	
+	        	}
 		}
+		
+		
+
+		public void checkEmailCharactar(String token) 
+		{
+		    Pattern p = Pattern.compile("[a-zA-Z0-9]([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+[a-zA-Z0-9]+)([.][a-zA-Z0-9-]+[a-zA-Z0-9]+)*)"); 
+	        Matcher m1 = p.matcher(token);
+	        if(m1.matches())	 
+	        	{
+	        		System.out.println("true");
+	        	 }
+	     }
+		
+		
+		
+		
+		public void removeSemicolonCharactar(String token) 
+		{
+		    Pattern p = Pattern.compile("[a-zA-Z0-9]([a-zA-Z0-9!@#$%&'*+/=?^_`{|}~-]+)*[a-zA-Z0-9]+|([a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+[.][a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+)+"); 
+	        Matcher m1 = p.matcher(token);
+	        if(!m1.matches())
+	        {
+	        		System.out.println("true ----------- ");
+	        	 }
+	     }
+		
 		
 		
 		public void ReadStopWords(String path) throws IOException
@@ -121,7 +154,7 @@ public class DocumentsParse {
 			 try {
 			        JSONParser parser = new JSONParser();
 			        //Use JSONObject for simple JSON and JSONArray for array of JSON.
-			        JSONObject data = (JSONObject) parser.parse(new FileReader("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\Verbs.json"));//path to the JSON file.
+			        JSONObject data = (JSONObject) parser.parse(new FileReader("C:\\Users\\Khalil\\Downloads\\Compressed\\IR Homework\\Verbs.json"));//path to the JSON file.
 			        JSONArray array = (JSONArray) data.get("verbs");
 			        for (int i = 0 ; i<array.size() ; i++) {
 			        	IrregularVerbs.add((JSONObject) array.get(i));
