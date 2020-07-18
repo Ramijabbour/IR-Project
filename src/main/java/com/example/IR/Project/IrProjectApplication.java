@@ -13,17 +13,14 @@ public class IrProjectApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(IrProjectApplication.class, args);
 		DocumentsParse d = new DocumentsParse();
-		
+	
 		try {
-			d.readFolder("C:\\Users\\Khalil\\Downloads\\Compressed\\IR Homework\\corpus\\corpus");
+			d.readFolder("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\corpus 2");
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
 	}
-	
-	
-
 }
