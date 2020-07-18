@@ -10,20 +10,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.sound.midi.Soundbank;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import ch.qos.logback.core.subst.Token;
+
 import org.apache.commons.lang3.StringUtils;
 
 
 
 public class DocumentsParse {
 
-	
-	public static List<String> TermsTokens;
-	public static List<String> StemmingWords = new ArrayList<String>();; 
 	public static List<String> StopWords = new ArrayList<String>();
+	public static List<String> TermsTokens =new ArrayList<String>();
+	public static List<String> indexTerms = new ArrayList<String>();
+	public static List<String> withdate = new ArrayList<String>();
 	public static List<JSONObject> IrregularVerbs = new ArrayList<JSONObject>();
 	
 
@@ -36,14 +42,14 @@ public class DocumentsParse {
 	  
 		public void  readFiles(File[] allfiles) throws IOException
 		{
-			TermsTokens = new ArrayList<String>();
 			BufferedReader in = null;
 			StringBuilder sb = new StringBuilder();
-	        ReadStopWords("C:\\Users\\Khalil\\Downloads\\Compressed\\IR Homework\\stop words.txt");
+	        ReadStopWords("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\stop words.txt");
         	GetIrregularVerbs();
-
 		        for (File f : allfiles) 
-		        {
+		        {	
+		        	sb.setLength(0);
+		        	System.out.println(" -------------- " + f.getName()+" ------------------");
 		        	if (f.getName().endsWith(".txt"))
 		        	{
 		        		System.out .println("Parsing document ");
@@ -54,63 +60,56 @@ public class DocumentsParse {
 		        			sb.append(s + "\n");
 		        		}      		        	
 			        	String fileContent = sb.toString();	
+			        	System.out.println(fileContent);
 			        	fileContent=fileContent.trim();
 			        	//fileContent = fileContent.replaceAll("( )+", " ");
 			        	String[] tokenes = fileContent.toString().toLowerCase().split(" ");
-			        	for(int i = 0 ; i < tokenes.length;i++)
-			        		removeUniqueCharactar(tokenes[i]);
-			        		
-			        	TermsTokens.removeAll(StopWords);
-			        	for(int i = 0 ; i<TermsTokens.size()-2;i++)
-			        	{
-			        		System.out.println(TermsTokens.get(i));
-			        		
-			        		if(StringUtils.isNumeric(TermsTokens.get(i)))
-			        		{
-			        				System.out.println("step 1 -----------------------");
-			        				String testDate1 = TermsTokens.get(i) +TermsTokens.get(i+1)+TermsTokens.get(i+2) ;
-			        				String testDate2 = TermsTokens.get(i) +TermsTokens.get(i+1);
-			        				
-				        			if(!check_Date(testDate1))
-				        			{
-				        				check_Date(testDate2);
-				        			}
-			        			
-			        		}
-			        		else 
-			        		{
-			        			if(!check_Date(TermsTokens.get(i)))
-			        			{
-			        				String testDate2 = TermsTokens.get(i)+" "+TermsTokens.get(i+1);
-			        				check_Date(testDate2);
 
-			        			}
-			        		}
-			        		
-			        		//getStemmingWords(word); 
-			        		//System.out.println(word);
-		        	   }
-			        }
-		        }    
+			        	for(int i = 0 ; i < tokenes.length;i++)
+			        		removeUniqueCharactar(tokenes[i]);	
+			        	
+			        		TermsTokens.removeAll(StopWords);
+			            	buildIndexTermsList();
+			            	TermsTokens.removeAll(withdate);
+
+			            	for (String word : TermsTokens)
+			            		getStemmingWords(word);
+			            		
+			            	
+			            	for(String ss : indexTerms)
+			            		System.out.println(ss);
+			            	
+		        	   } 
+		        	
+		        indexTerms.clear();
+		        TermsTokens.clear();
+		        withdate.clear();
+		        in.close();
+		        }     
+		        
+		        
 		}
+		
 
 		public void removeUniqueCharactar(String token) 
 		{
+			String word ; 
 			//|[a-zA-Z0-9]([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+[a-zA-Z0-9]+)([.][a-zA-Z0-9-]+[a-zA-Z0-9]+)*)|[a-z]+[.][a-z]+|([a-z]+[-]*)+|[0-9]+
-		    Pattern p = Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+"); 
+		    Pattern p = Pattern.compile("([a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+)"); 
 	        Matcher m1 = p.matcher(token); 			           
 	        while (m1.find())
 	        	//TermsTokens.add(m1.group());
-	        	{System.out.println(m1.group());
-	        	removeSemicolonCharactar(m1.group());
-	        	checkEmailCharactar(m1.group());
+	        	{	
+	        	word = removeSemicolonCharactar(m1.group());
+	        	TermsTokens.add(word);
+	        	//checkEmailCharactar(m1.group());
 	        	//check_Date(m1.group());
 	        	
 	        	}
 		}
 		
 		
-
+/*
 		public void checkEmailCharactar(String token) 
 		{
 		    Pattern p = Pattern.compile("[a-zA-Z0-9]([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+[a-zA-Z0-9]+)([.][a-zA-Z0-9-]+[a-zA-Z0-9]+)*)"); 
@@ -118,20 +117,20 @@ public class DocumentsParse {
 	        if(m1.matches())	 
 	        	{
 	        		System.out.println("true");
-	        	 }
+	        	}
 	     }
 		
+	*/	
 		
 		
-		
-		public void removeSemicolonCharactar(String token) 
+		public String removeSemicolonCharactar(String token) 
 		{
-		    Pattern p = Pattern.compile("[a-zA-Z0-9]([a-zA-Z0-9!@#$%&'*+/=?^_`{|}~-]+)*[a-zA-Z0-9]+|([a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+[.][a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+)+"); 
+		    Pattern p = Pattern.compile("[a-zA-Z0-9]([a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+)*[a-zA-Z0-9]+|([a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+[.][a-zA-Z0-9][a-zA-Z0-9.!@#$%&'*+/=?^_`{|}~-]+)+"); 
 	        Matcher m1 = p.matcher(token);
-	        if(!m1.matches())
-	        {
-	        		System.out.println("true ----------- ");
-	        	 }
+	        while(m1.find())
+	        	return m1.group();
+	        return  "w";
+	        			
 	     }
 		
 		
@@ -154,7 +153,7 @@ public class DocumentsParse {
 			 try {
 			        JSONParser parser = new JSONParser();
 			        //Use JSONObject for simple JSON and JSONArray for array of JSON.
-			        JSONObject data = (JSONObject) parser.parse(new FileReader("C:\\Users\\Khalil\\Downloads\\Compressed\\IR Homework\\Verbs.json"));//path to the JSON file.
+			        JSONObject data = (JSONObject) parser.parse(new FileReader("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\Verbs.json"));//path to the JSON file.
 			        JSONArray array = (JSONArray) data.get("verbs");
 			        for (int i = 0 ; i<array.size() ; i++) {
 			        	IrregularVerbs.add((JSONObject) array.get(i));
@@ -171,13 +170,13 @@ public class DocumentsParse {
 		public void getStemmingWords(String token)
 		{
 			
-			boolean ifIrregular = false ; 
+			boolean ifIrregular = false ; 	
 			for(JSONObject object : IrregularVerbs)
 			{
+				
 				if(token.equalsIgnoreCase(object.get("Past-simple").toString()) || token.equalsIgnoreCase(object.get("Past-Participle").toString()))
 				{
-
-					StemmingWords.add(object.get("Base").toString());
+					indexTerms.add(object.get("Base").toString());
 					ifIrregular=true ; 
 				}
 				
@@ -187,7 +186,8 @@ public class DocumentsParse {
 			{
 				Porter p = new Porter ();
 				String Stemm_word = p.stripAffixes(token);
-				StemmingWords.add(Stemm_word);
+				indexTerms.add(Stemm_word);
+			
 			}
 				
 		}
@@ -226,6 +226,72 @@ public class DocumentsParse {
 	         return false ; 
 		}
 
+		public void buildIndexTermsList()
+		{
+        	
+        	for(int i = 0 ; i<TermsTokens.size();i++)
+        	{			        		
+        		if(i==TermsTokens.size()-1)
+        		{
+        			if(check_Date(TermsTokens.get(i)))
+    				{
+        				String date = TermsTokens.get(i).replaceAll("[-]|[.]", "/");
+    					indexTerms.add(date);
+    					withdate.add(TermsTokens.get(i));
+        				//TermsTokens.remove(i);
+    				}
+        		}
+        		else if(i==TermsTokens.size()-2)
+        		{ 
+        			String testDate2 = TermsTokens.get(i) +TermsTokens.get(i+1);
+        			if(check_Date(testDate2))
+    				{ 
+    					System.out.println(testDate2 + " ------------------------" );
+    					String date = "1/"+TermsTokens.get(i)+"/"+TermsTokens.get(i+1);
+    					indexTerms.add(date);
+    					withdate.add(TermsTokens.get(i));
+    					withdate.add(TermsTokens.get(i+1));
 
-		
+    					//TermsTokens.remove(i);TermsTokens.remove(i+1);	
+    				}
+        		}
+        		else 
+        		{
+		        		String testDate1 = TermsTokens.get(i) +" "+TermsTokens.get(i+1)+" "+TermsTokens.get(i+2) ;
+	    				String testDate2 = TermsTokens.get(i)+" "+TermsTokens.get(i+1);
+	    				if(check_Date(testDate1))
+	    				{   
+	    					System.out.println(testDate1+"*************************************");
+	    					String date = TermsTokens.get(i)+"/"+TermsTokens.get(i+1)+"/"+TermsTokens.get(i+2);
+	    					indexTerms.add(date);
+	    					//TermsTokens.remove(i);TermsTokens.remove(i+1);TermsTokens.remove(i+2);
+	    					withdate.add(TermsTokens.get(i));
+	    					withdate.add(TermsTokens.get(i+1));
+	    					withdate.add(TermsTokens.get(i+2));
+
+	    					i=i+1;
+	    				}
+	    				else if(check_Date(testDate2))
+	    				{
+	    					System.out.println(testDate2+"++++++++++++++++++++++++++++++++++++++++");
+	    					String date = "1/"+TermsTokens.get(i)+"/"+TermsTokens.get(i+1);
+	    					indexTerms.add(date);
+	    					withdate.add(TermsTokens.get(i));
+	    					withdate.add(TermsTokens.get(i+1));
+
+	    					//TermsTokens.remove(i);TermsTokens.remove(i+1);
+	    					//i=i+1; 
+	    				}
+	    				else if (check_Date(TermsTokens.get(i)))
+	    				{
+	    					String date = TermsTokens.get(i).replaceAll("[-]|[.]", "/");
+	    					indexTerms.add(date);
+	    					//TermsTokens.remove(i);
+	    					withdate.add(TermsTokens.get(i));
+
+	    					
+	    				}
+	        		}
+        		}
+		}
 }

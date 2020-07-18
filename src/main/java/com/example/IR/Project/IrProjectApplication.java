@@ -14,15 +14,15 @@ public class IrProjectApplication {
 		SpringApplication.run(IrProjectApplication.class, args);
 		DocumentsParse d = new DocumentsParse();
 	
-		/*try {
-			d.readFolder("C:\\Users\\Khalil\\Downloads\\Compressed\\IR Homework\\corpus\\New folder");
+		try {
+			d.readFolder("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\corpus");
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 		
-		d.removeUniqueCharactar("hi man this is my email  # 800$$ khalil@gmail.com, asd,asd.ss asd. 10.10.2020");
+	//	d.removeUniqueCharactar("hi man this is my email  # 800$$ khalil@gmail.com, asd,asd.ss asd. 10.10.2020");
 		
 	}
 }
