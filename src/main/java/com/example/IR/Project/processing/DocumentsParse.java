@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +18,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.example.IR.Project.Model.FileModel;
+import com.example.IR.Project.Service.FileService;
+import com.example.IR.Project.Service.FileWordService;
+import com.example.IR.Project.Service.WordService;
 
 import ch.qos.logback.core.subst.Token;
 
@@ -26,13 +33,23 @@ import org.apache.commons.lang3.StringUtils;
 
 public class DocumentsParse {
 
+	@Autowired
+	FileService fileService; 
+	@Autowired
+	FileWordService fileWordService; 
+	@Autowired
+	WordService wordService; 
+	
+	
+	
 	public static List<String> StopWords = new ArrayList<String>();
 	public static List<String> TermsTokens =new ArrayList<String>();
-	public static List<String> indexTerms = new ArrayList<String>();
+	public static ArrayList<String> indexTerms = new ArrayList<String>();
+	public static List<Word> index = new ArrayList<Word>();
+	 ArrayList<String> temp ;
 	public static List<String> withdate = new ArrayList<String>();
 	public static List<JSONObject> IrregularVerbs = new ArrayList<JSONObject>();
-	
-
+	public static List<List<String>> documents = new ArrayList<List<String>>();
 	
 	  public void readFolder(String filePath) throws IOException{
 			File[] allfiles = new File(filePath).listFiles();
@@ -48,6 +65,8 @@ public class DocumentsParse {
         	GetIrregularVerbs();
 		        for (File f : allfiles) 
 		        {	
+		        	FileModel fileModel = new FileModel(f.getName());
+		        	fileService.addFile(fileModel);
 		        	sb.setLength(0);
 		        	System.out.println(" -------------- " + f.getName()+" ------------------");
 		        	if (f.getName().endsWith(".txt"))
@@ -60,7 +79,7 @@ public class DocumentsParse {
 		        			sb.append(s + "\n");
 		        		}      		        	
 			        	String fileContent = sb.toString();	
-			        	System.out.println(fileContent);
+			        	//System.out.println(fileContent);
 			        	fileContent=fileContent.trim();
 			        	//fileContent = fileContent.replaceAll("( )+", " ");
 			        	String[] tokenes = fileContent.toString().toLowerCase().split(" ");
@@ -76,17 +95,18 @@ public class DocumentsParse {
 			            		getStemmingWords(word);
 			            		
 			            	
-			            	for(String ss : indexTerms)
-			            		System.out.println(ss);
+			            	/*for(String ss : indexTerms)
+			            		System.out.println(ss);*/
 			            	
 		        	   } 
-		        	
+		        temp = (ArrayList<String>)indexTerms.clone();	
+		        documents.add(temp);	
 		        indexTerms.clear();
 		        TermsTokens.clear();
 		        withdate.clear();
 		        in.close();
 		        }     
-		        
+		      
 		        
 		}
 		
@@ -294,4 +314,67 @@ public class DocumentsParse {
 	        		}
         		}
 		}
+		
+		public Word existWord(List<Word> word , String name)
+		{
+			for(Word w : word)
+			{
+				if(w.getWord().equalsIgnoreCase(name))
+					return w;
+			}
+			
+			return null ; 
+		}
+		
+		public boolean existDoc(List<Occurence> occ , int name)
+		{
+			for(Occurence w : occ)
+			{
+				if(w.getDoc()==name)
+					return true;
+			}
+			
+			return false ; 
+		}
+		
+		
+		public void CreateIndex()
+		{
+			TFIDFCalculator tfidf  =new TFIDFCalculator();
+			System.out.println("size List : "+documents.size());
+			for(int i = 0 ; i< documents.size() ; i++) {
+				
+				for(String s : documents.get(i))
+				{
+					double weghit = tfidf.tfIdf(documents.get(i), documents, s);
+					Word w = new Word(s,i,weghit);
+					if(existWord(index, w.getWord())==null)
+					{	//wordService.addword(w);
+						index.add(w);
+					}
+					else 
+					{	
+						Word temp = existWord(index, w.getWord());
+										
+						if(!existDoc(temp.getOccurences(), i)) {
+							temp.insert(i, weghit);
+							index.remove(temp);
+							index.add(temp);
+						}
+
+					}
+				}
+			}
+			
+			for(Word w: index)
+			{	System.out.println(w.getWord() );
+				for(Occurence c : w.getOccurences())
+				System.out.println (" , " + c.getDoc() +" , "+ c.getFre() );
+			}
+			System.out.println("---------------------------------------------");
+		}
+		
+		
+
+		
 }

@@ -1,6 +1,7 @@
 package com.example.IR.Project;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,11 +18,21 @@ public class IrProjectApplication {
 		try {
 			d.readFolder("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\corpus");
 			
+			System.out.println("start create index .............. ...");
+			//d.CreateIndex();
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+		/*ArrayList< String > a = new ArrayList<String>();
+		a.add("rami");
+		a.add("khalil");
+		a.add("rami");
+		
+		System.out.println(a.contains("rami"));
+		*/
 	//	d.removeUniqueCharactar("hi man this is my email  # 800$$ khalil@gmail.com, asd,asd.ss asd. 10.10.2020");
 		
 	}
