@@ -8,7 +8,7 @@ import javax.persistence.Id;
 
 @Entity
 
-public class Word {
+public class WordModel {
 
 	@Id                                                  
 	@GeneratedValue(strategy = GenerationType.AUTO)      
@@ -16,7 +16,7 @@ public class Word {
 	                                                     
 	String word ;
 
-	public Word(String word) {
+	public WordModel(String word) {
 		super();
 		this.word = word;
 	}

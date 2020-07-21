@@ -7,30 +7,32 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.sound.midi.Soundbank;
+import javax.annotation.PostConstruct;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.IR.Project.Model.FileModel;
+import com.example.IR.Project.Model.FileWord;
+import com.example.IR.Project.Model.WordModel;
+import com.example.IR.Project.Repository.FileWordRepository;
 import com.example.IR.Project.Service.FileService;
 import com.example.IR.Project.Service.FileWordService;
 import com.example.IR.Project.Service.WordService;
 
-import ch.qos.logback.core.subst.Token;
-
-import org.apache.commons.lang3.StringUtils;
 
 
-
+@RestController
 public class DocumentsParse {
 
 	@Autowired
@@ -44,19 +46,22 @@ public class DocumentsParse {
 	
 	public static List<String> StopWords = new ArrayList<String>();
 	public static List<String> TermsTokens =new ArrayList<String>();
-	public static ArrayList<String> indexTerms = new ArrayList<String>();
+	//public static ArrayList<String> indexTerms = new ArrayList<String>();
 	public static List<Word> index = new ArrayList<Word>();
 	 ArrayList<String> temp ;
 	public static List<String> withdate = new ArrayList<String>();
 	public static List<JSONObject> IrregularVerbs = new ArrayList<JSONObject>();
 	public static List<List<String>> documents = new ArrayList<List<String>>();
 	
-	  public void readFolder(String filePath) throws IOException{
+	
+	@RequestMapping("/file")
+	  public void readFolder() throws IOException{
+		String filePath="C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\corpus 2";
 			File[] allfiles = new File(filePath).listFiles();
 			readFiles(allfiles);
 		}
-	
-	  
+    
+
 		public void  readFiles(File[] allfiles) throws IOException
 		{
 			BufferedReader in = null;
@@ -67,6 +72,7 @@ public class DocumentsParse {
 		        {	
 		        	FileModel fileModel = new FileModel(f.getName());
 		        	fileService.addFile(fileModel);
+		        	
 		        	sb.setLength(0);
 		        	System.out.println(" -------------- " + f.getName()+" ------------------");
 		        	if (f.getName().endsWith(".txt"))
@@ -86,22 +92,23 @@ public class DocumentsParse {
 
 			        	for(int i = 0 ; i < tokenes.length;i++)
 			        		removeUniqueCharactar(tokenes[i]);	
-			        	
+			        	System.out.println("step 1 ");
 			        		TermsTokens.removeAll(StopWords);
-			            	buildIndexTermsList();
+			        		System.out.println("step 2 ");
+			            	//buildIndexTermsList(fileModel);
 			            	TermsTokens.removeAll(withdate);
 
 			            	for (String word : TermsTokens)
-			            		getStemmingWords(word);
+			            		getStemmingWords(word,fileModel);
 			            		
 			            	
 			            	/*for(String ss : indexTerms)
 			            		System.out.println(ss);*/
 			            	
 		        	   } 
-		        temp = (ArrayList<String>)indexTerms.clone();	
-		        documents.add(temp);	
-		        indexTerms.clear();
+		       // temp = (ArrayList<String>)indexTerms.clone();	
+		      //  documents.add(temp);	
+		        //indexTerms.clear();
 		        TermsTokens.clear();
 		        withdate.clear();
 		        in.close();
@@ -187,7 +194,7 @@ public class DocumentsParse {
 			
 		}
 		
-		public void getStemmingWords(String token)
+		public void getStemmingWords(String token ,FileModel filemodel)
 		{
 			
 			boolean ifIrregular = false ; 	
@@ -196,7 +203,20 @@ public class DocumentsParse {
 				
 				if(token.equalsIgnoreCase(object.get("Past-simple").toString()) || token.equalsIgnoreCase(object.get("Past-Participle").toString()))
 				{
-					indexTerms.add(object.get("Base").toString());
+					//indexTerms.add(object.get("Base").toString());
+					WordModel  wordtoDataBase = new WordModel(object.get("Base").toString());
+					FileWord fileWord = fileWordService.findWord(wordtoDataBase);
+					if(fileWord==null) {
+    				wordService.addWord(wordtoDataBase);
+    				FileWord newFileWord = new FileWord(filemodel,wordtoDataBase , 1);
+    				fileWordService.add(newFileWord);
+					}
+					else 
+					{
+						fileWordService.incrementRank(fileWord);
+						
+					}
+					
 					ifIrregular=true ; 
 				}
 				
@@ -206,7 +226,21 @@ public class DocumentsParse {
 			{
 				Porter p = new Porter ();
 				String Stemm_word = p.stripAffixes(token);
-				indexTerms.add(Stemm_word);
+				//indexTerms.add(Stemm_word);
+				WordModel  wordtoDataBase = new WordModel(Stemm_word);
+				FileWord fileWord = fileWordService.findWord(wordtoDataBase);
+				if(fileWord==null) {
+				wordService.addWord(wordtoDataBase);
+				FileWord newFileWord = new FileWord(filemodel,wordtoDataBase , 1);
+				fileWordService.add(newFileWord);
+				wordService.addWord(wordtoDataBase);
+				}
+				else 
+				{
+					fileWordService.incrementRank(fileWord);	
+				}
+				
+				
 			
 			}
 				
@@ -256,7 +290,10 @@ public class DocumentsParse {
         			if(check_Date(TermsTokens.get(i)))
     				{
         				String date = TermsTokens.get(i).replaceAll("[-]|[.]", "/");
-    					indexTerms.add(date);
+    					//indexTerms.add(date);
+        				WordModel  wordtoDataBase = new WordModel(date);
+        				wordService.addWord(wordtoDataBase);
+        				
     					withdate.add(TermsTokens.get(i));
         				//TermsTokens.remove(i);
     				}
@@ -268,7 +305,9 @@ public class DocumentsParse {
     				{ 
     					System.out.println(testDate2 + " ------------------------" );
     					String date = "1/"+TermsTokens.get(i)+"/"+TermsTokens.get(i+1);
-    					indexTerms.add(date);
+    					//indexTerms.add(date);
+    			    	WordModel  wordtoDataBase = new WordModel(date);
+        				wordService.addWord(wordtoDataBase);
     					withdate.add(TermsTokens.get(i));
     					withdate.add(TermsTokens.get(i+1));
 
@@ -283,7 +322,9 @@ public class DocumentsParse {
 	    				{   
 	    					System.out.println(testDate1+"*************************************");
 	    					String date = TermsTokens.get(i)+"/"+TermsTokens.get(i+1)+"/"+TermsTokens.get(i+2);
-	    					indexTerms.add(date);
+	    					//indexTerms.add(date);
+	    					WordModel  wordtoDataBase = new WordModel(date);
+	        				wordService.addWord(wordtoDataBase);
 	    					//TermsTokens.remove(i);TermsTokens.remove(i+1);TermsTokens.remove(i+2);
 	    					withdate.add(TermsTokens.get(i));
 	    					withdate.add(TermsTokens.get(i+1));
@@ -295,7 +336,10 @@ public class DocumentsParse {
 	    				{
 	    					System.out.println(testDate2+"++++++++++++++++++++++++++++++++++++++++");
 	    					String date = "1/"+TermsTokens.get(i)+"/"+TermsTokens.get(i+1);
-	    					indexTerms.add(date);
+	    					//indexTerms.add(date);
+	    					WordModel  wordtoDataBase = new WordModel(date);
+	    					
+	        				wordService.addWord(wordtoDataBase);
 	    					withdate.add(TermsTokens.get(i));
 	    					withdate.add(TermsTokens.get(i+1));
 
@@ -305,7 +349,9 @@ public class DocumentsParse {
 	    				else if (check_Date(TermsTokens.get(i)))
 	    				{
 	    					String date = TermsTokens.get(i).replaceAll("[-]|[.]", "/");
-	    					indexTerms.add(date);
+	    					//indexTerms.add(date);
+	    					WordModel  wordtoDataBase = new WordModel(date);
+	        				wordService.addWord(wordtoDataBase);
 	    					//TermsTokens.remove(i);
 	    					withdate.add(TermsTokens.get(i));
 
@@ -348,6 +394,7 @@ public class DocumentsParse {
 				{
 					double weghit = tfidf.tfIdf(documents.get(i), documents, s);
 					Word w = new Word(s,i,weghit);
+					
 					if(existWord(index, w.getWord())==null)
 					{	//wordService.addword(w);
 						index.add(w);

@@ -16,12 +16,12 @@ public class FileWord {
 	@ManyToOne                                                  
 	FileModel file ; 
 	@ManyToOne
-	Word word;
+	WordModel word;
 	
 	int Ranking;
 	
 	
-	public FileWord(FileModel file, Word word, int ranking) {
+	public FileWord(FileModel file, WordModel word, int ranking) {
 		super();
 		this.file = file;
 		this.word = word;
@@ -39,10 +39,10 @@ public class FileWord {
 	public void setFile(FileModel file) {
 		this.file = file;
 	}
-	public Word getWord() {
+	public WordModel getWord() {
 		return word;
 	}
-	public void setWord(Word word) {
+	public void setWord(WordModel word) {
 		this.word = word;
 	}
 	public int getRanking() {
