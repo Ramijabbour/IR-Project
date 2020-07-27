@@ -61,12 +61,10 @@ public class DocumentsParse {
 			readFiles(allfiles);
 		}
     
-
 		public void  readFiles(File[] allfiles) throws IOException
 		{
 			BufferedReader in = null;
 			StringBuilder sb = new StringBuilder();
-	        ReadStopWords("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\stop words.txt");
         	GetIrregularVerbs();
 		        for (File f : allfiles) 
 		        {	
@@ -90,9 +88,12 @@ public class DocumentsParse {
 			        	//fileContent = fileContent.replaceAll("( )+", " ");
 			        	String[] tokenes = fileContent.toString().toLowerCase().split(" ");
 
-			        	for(int i = 0 ; i < tokenes.length;i++)
-			        		removeUniqueCharactar(tokenes[i]);	
-			        	System.out.println("step 1 ");
+			        	for(int i = 0 ; i < tokenes.length;i++) {
+			        		
+			        		String tempString = removeUniqueCharactar(tokenes[i]);
+			        		if(tempString.length()>1)
+			        		TermsTokens.add(tempString);
+			        	}
 			        		TermsTokens.removeAll(StopWords);
 			        		System.out.println("step 2 ");
 			            	//buildIndexTermsList(fileModel);
@@ -118,7 +119,7 @@ public class DocumentsParse {
 		}
 		
 
-		public void removeUniqueCharactar(String token) 
+		public String removeUniqueCharactar(String token) 
 		{
 			String word ; 
 			//|[a-zA-Z0-9]([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+[a-zA-Z0-9]+)([.][a-zA-Z0-9-]+[a-zA-Z0-9]+)*)|[a-z]+[.][a-z]+|([a-z]+[-]*)+|[0-9]+
@@ -128,11 +129,13 @@ public class DocumentsParse {
 	        	//TermsTokens.add(m1.group());
 	        	{	
 	        	word = removeSemicolonCharactar(m1.group());
-	        	TermsTokens.add(word);
+	        	//TermsTokens.add(word);
+	        	return word;
 	        	//checkEmailCharactar(m1.group());
 	        	//check_Date(m1.group());
 	        	
 	        	}
+	        return "w";
 		}
 		
 		
@@ -245,6 +248,32 @@ public class DocumentsParse {
 			}
 				
 		}
+		
+		public String getStemmingWords(String token )
+		{
+			String stemmWordQuery = null ;
+			boolean ifIrregular = false ; 	
+			for(JSONObject object : IrregularVerbs)
+			{
+				
+				if(token.equalsIgnoreCase(object.get("Past-simple").toString()) || token.equalsIgnoreCase(object.get("Past-Participle").toString()))
+				{
+					stemmWordQuery=object.get("Base").toString();
+					ifIrregular=true ; 
+				}
+				
+			}
+			
+			if(!ifIrregular)
+			{
+				Porter p = new Porter ();
+				String Stemm_word = p.stripAffixes(token);
+				stemmWordQuery=Stemm_word;
+			}
+			return stemmWordQuery;
+				
+		}
+		
 		
 		public boolean check_Date(String word)
 		{

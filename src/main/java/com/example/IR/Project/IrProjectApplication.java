@@ -2,6 +2,8 @@ package com.example.IR.Project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -18,6 +20,8 @@ public class IrProjectApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(IrProjectApplication.class, args);
 		//DocumentsParse d = new DocumentsParse();
+
+		
 	/*
 		try {
 			//d.readFolder("C:\\Users\\ramij\\Desktop\\IR\\IR Homework\\corpus 2");
